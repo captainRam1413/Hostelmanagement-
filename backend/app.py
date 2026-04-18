@@ -20,7 +20,8 @@ def create_app():
     base_dir = os.path.abspath(os.path.dirname(__file__))
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(base_dir, 'hostel.db')}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["JWT_SECRET_KEY"] = "hostel-secret-key-2024"
+    # Load secret from env; fall back to a default only for local dev
+    app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "hostel-secret-key-2024")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 86400  # 24 hours
 
     db.init_app(app)
@@ -71,4 +72,5 @@ def _seed_rooms():
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    app.run(debug=debug, port=5000)

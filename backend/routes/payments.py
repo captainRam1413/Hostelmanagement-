@@ -68,9 +68,9 @@ def create_payment():
 
         db.session.commit()
         return jsonify(payment.to_dict()), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to create payment"}), 500
 
 
 @payments_bp.route("/payments/<int:payment_id>", methods=["GET"])
@@ -88,6 +88,6 @@ def delete_payment(payment_id):
         db.session.delete(payment)
         db.session.commit()
         return jsonify({"message": "Payment deleted"}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to delete payment"}), 500

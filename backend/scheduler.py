@@ -9,7 +9,7 @@ def check_expired_students():
     with app.app_context():
         today = date.today()
         expired = Student.query.filter(
-            Student.end_date < today,
+            Student.end_date <= today,
             Student.is_active == True,
         ).all()
 

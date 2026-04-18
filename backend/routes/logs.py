@@ -51,6 +51,6 @@ def create_log():
         db.session.add(log)
         db.session.commit()
         return jsonify(log.to_dict()), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to create log entry"}), 500

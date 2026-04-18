@@ -33,9 +33,9 @@ def create_room():
         db.session.add(room)
         db.session.commit()
         return jsonify(room.to_dict()), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to create room"}), 500
 
 
 @rooms_bp.route("/rooms/<int:room_id>", methods=["GET"])
@@ -59,9 +59,9 @@ def update_room(room_id):
                 setattr(room, field, int(data[field]))
         db.session.commit()
         return jsonify(room.to_dict()), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to update room"}), 500
 
 
 @rooms_bp.route("/rooms/<int:room_id>", methods=["DELETE"])
@@ -72,6 +72,6 @@ def delete_room(room_id):
         db.session.delete(room)
         db.session.commit()
         return jsonify({"message": "Room deleted"}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to delete room"}), 500

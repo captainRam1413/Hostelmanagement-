@@ -58,13 +58,15 @@ def create_student():
         from models import Room
         room = Room.query.filter_by(room_number=data["room_number"]).first()
         if room:
+            if room.occupied >= room.capacity:
+                return jsonify({"error": "Selected room is at full capacity"}), 409
             room.occupied = min(room.occupied + 1, room.capacity)
 
         db.session.commit()
         return jsonify(student.to_dict()), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to create student"}), 500
 
 
 @students_bp.route("/students/<int:student_id>", methods=["GET"])
@@ -103,9 +105,9 @@ def update_student(student_id):
 
         db.session.commit()
         return jsonify(student.to_dict()), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to update student"}), 500
 
 
 @students_bp.route("/students/<int:student_id>", methods=["DELETE"])
@@ -122,6 +124,6 @@ def delete_student(student_id):
         db.session.delete(student)
         db.session.commit()
         return jsonify({"message": "Student deleted"}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to delete student"}), 500
