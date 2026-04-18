@@ -1,0 +1,5 @@
+backend/__pycache__
+backend/routes/__pycache__
+backend/biometric/__pycache__
+backend/hostel.db
+frontend/node_modules
