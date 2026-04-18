@@ -21,7 +21,7 @@ class ESSLDevice:
 
     def connect(self) -> bool:
         """Simulate connecting to the ESSL device."""
-        logger.info(f"[ESSL] Connecting to {self.host}:{self.port}")
+        logger.info("[ESSL] Connecting to %s:%s", self.host, self.port)
         self.connected = True
         return True
 
@@ -39,7 +39,7 @@ class ESSLDevice:
                 "student_name": student.name,
                 "timestamp": datetime.utcnow().isoformat(),
             })
-            logger.info(f"[ESSL] Synced student {student.id} - {student.name}")
+            logger.info("[ESSL] Synced student %s - %s", student.id, student.name)
             return {
                 "success": True,
                 "message": f"Student '{student.name}' synced to device",
@@ -47,13 +47,13 @@ class ESSLDevice:
                 "synced_at": datetime.utcnow().isoformat(),
             }
         except Exception as exc:
-            logger.error(f"[ESSL] sync_user failed: {exc}")
-            return {"success": False, "message": str(exc)}
+            logger.error("[ESSL] sync_user failed: %s", exc)
+            return {"success": False, "message": "Failed to sync user to device"}
 
     def activate_user(self, user_id: int) -> dict:
         """Enable fingerprint access for a student."""
         _active_users.add(user_id)
-        logger.info(f"[ESSL] Activated user {user_id}")
+        logger.info("[ESSL] Activated user %s", user_id)
         return {
             "success": True,
             "message": f"User {user_id} fingerprint access activated",
@@ -64,7 +64,7 @@ class ESSLDevice:
     def deactivate_user(self, user_id: int) -> dict:
         """Disable fingerprint access for a student."""
         _active_users.discard(user_id)
-        logger.info(f"[ESSL] Deactivated user {user_id}")
+        logger.info("[ESSL] Deactivated user %s", user_id)
         return {
             "success": True,
             "message": f"User {user_id} fingerprint access deactivated",
