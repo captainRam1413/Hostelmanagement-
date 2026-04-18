@@ -1,4 +1,5 @@
 import os
+import calendar
 from datetime import date, datetime, timedelta
 from flask import Blueprint, request, jsonify, send_from_directory, current_app
 from flask_jwt_extended import jwt_required
@@ -30,8 +31,7 @@ def calculate_end_date(start_date, plan_type):
     try:
         return start_date.replace(year=new_year, month=new_month)
     except ValueError:
-        # Handle month-end edge cases
-        import calendar
+        # Handle month-end edge cases (e.g. Jan 31 + 1 month = Feb 28/29)
         last_day = calendar.monthrange(new_year, new_month)[1]
         return start_date.replace(year=new_year, month=new_month, day=last_day)
 

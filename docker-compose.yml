@@ -5,10 +5,11 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - JWT_SECRET_KEY=change-this-in-production
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - FLASK_DEBUG=false
     volumes:
       - ./backend/uploads:/app/uploads
-      - ./backend/hostel.db:/app/hostel.db
+      - hostel_db:/app
     restart: unless-stopped
 
   frontend:
@@ -18,3 +19,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  hostel_db:

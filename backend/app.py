@@ -23,7 +23,16 @@ def create_app():
         "DATABASE_URL", f"sqlite:///{os.path.join(base_dir, 'hostel.db')}"
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "change-me-in-production")
+    jwt_secret = os.environ.get("JWT_SECRET_KEY")
+    if not jwt_secret:
+        import warnings
+        warnings.warn(
+            "JWT_SECRET_KEY is not set. Using an insecure default. "
+            "Set JWT_SECRET_KEY environment variable before deploying.",
+            stacklevel=2,
+        )
+        jwt_secret = "change-me-in-production"
+    app.config["JWT_SECRET_KEY"] = jwt_secret
     app.config["UPLOAD_FOLDER"] = os.path.join(base_dir, "uploads")
 
     # Extensions
@@ -63,4 +72,5 @@ if __name__ == "__main__":
     app = create_app()
     from scheduler import init_scheduler
     init_scheduler(app)
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    app.run(debug=debug, host="0.0.0.0", port=5000)
