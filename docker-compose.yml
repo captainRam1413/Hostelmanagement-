@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - JWT_SECRET_KEY=change-this-in-production
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/hostel.db:/app/hostel.db
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
