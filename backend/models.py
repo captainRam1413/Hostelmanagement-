@@ -41,6 +41,8 @@ class Student(db.Model):
     name = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20))
     email = db.Column(db.String(120))
+    address = db.Column(db.Text)
+    parent_contact_no = db.Column(db.String(20))
     room_id = db.Column(db.Integer, db.ForeignKey("rooms.id"))
     plan_type = db.Column(db.String(20))  # monthly|3months|6months|12months
     start_date = db.Column(db.Date)
@@ -48,6 +50,7 @@ class Student(db.Model):
     payment_status = db.Column(db.String(20), default="pending")  # active|expired|pending
     biometric_enabled = db.Column(db.Boolean, default=False)
     biometric_id = db.Column(db.String(50))  # fingerprint ID on ESSL device
+    essl_uid = db.Column(db.Integer)  # numeric UID used on the ZKTeco device
     id_proof_path = db.Column(db.String(256))
     photo_path = db.Column(db.String(256))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -60,6 +63,8 @@ class Student(db.Model):
             "name": self.name,
             "phone": self.phone,
             "email": self.email,
+            "address": self.address,
+            "parent_contact_no": self.parent_contact_no,
             "room_id": self.room_id,
             "room_number": self.room.room_number if self.room else None,
             "plan_type": self.plan_type,
@@ -68,6 +73,7 @@ class Student(db.Model):
             "payment_status": self.payment_status,
             "biometric_enabled": self.biometric_enabled,
             "biometric_id": self.biometric_id,
+            "essl_uid": self.essl_uid,
             "id_proof_path": self.id_proof_path,
             "photo_path": self.photo_path,
             "created_at": self.created_at.isoformat() if self.created_at else None,
@@ -119,4 +125,28 @@ class BiometricLog(db.Model):
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
             "device_id": self.device_id,
             "notes": self.notes,
+        }
+
+
+class DeviceConfig(db.Model):
+    __tablename__ = "device_config"
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(50), nullable=False, default="192.168.1.201")
+    port = db.Column(db.Integer, nullable=False, default=4370)
+    status = db.Column(db.String(20), default="unknown")  # connected | disconnected | unknown
+    last_sync = db.Column(db.DateTime)
+    device_serial = db.Column(db.String(100))
+    firmware_version = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "ip_address": self.ip_address,
+            "port": self.port,
+            "status": self.status,
+            "last_sync": self.last_sync.isoformat() if self.last_sync else None,
+            "device_serial": self.device_serial,
+            "firmware_version": self.firmware_version,
         }

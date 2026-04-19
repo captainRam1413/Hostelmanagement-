@@ -5,7 +5,7 @@ from flask_jwt_extended import JWTManager
 from werkzeug.security import generate_password_hash
 
 from extensions import db, jwt
-from models import User
+from models import User, DeviceConfig
 from routes.auth import auth_bp
 from routes.students import students_bp
 from routes.payments import payments_bp
@@ -66,6 +66,12 @@ def _seed_admin():
         db.session.add(admin)
         db.session.commit()
         print("[Seed] Default admin created: admin / admin123")
+
+    if not DeviceConfig.query.first():
+        cfg = DeviceConfig(ip_address="192.168.1.201", port=4370, status="unknown")
+        db.session.add(cfg)
+        db.session.commit()
+        print("[Seed] Default DeviceConfig created")
 
 
 if __name__ == "__main__":

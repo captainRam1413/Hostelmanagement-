@@ -82,6 +82,8 @@ def create_student():
         name=data["name"],
         phone=data.get("phone"),
         email=data.get("email"),
+        address=data.get("address"),
+        parent_contact_no=data.get("parent_contact_no"),
         room_id=data.get("room_id") or None,
         plan_type=plan_type,
         start_date=start_date,
@@ -126,7 +128,7 @@ def update_student(student_id):
 
     old_room_id = student.room_id
 
-    for field in ["name", "phone", "email", "plan_type", "payment_status", "biometric_id"]:
+    for field in ["name", "phone", "email", "address", "parent_contact_no", "plan_type", "payment_status", "biometric_id"]:
         if data.get(field) is not None:
             setattr(student, field, data[field])
 

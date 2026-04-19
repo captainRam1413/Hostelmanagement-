@@ -1,10 +1,11 @@
 from datetime import date
 from extensions import db
 from models import Student, BiometricLog
+import biometric_service as bs
 
 
 def check_and_update_expired_students(app):
-    """Daily cron: expire students whose plan end_date has passed."""
+    """Daily cron: expire students whose plan end_date has passed and disable device access."""
     with app.app_context():
         today = date.today()
         expired_students = Student.query.filter(
@@ -12,14 +13,23 @@ def check_and_update_expired_students(app):
             Student.end_date < today,
         ).all()
 
+        from models import DeviceConfig
+        cfg = DeviceConfig.query.first()
+
         for student in expired_students:
             student.payment_status = "expired"
             if student.biometric_enabled:
+                # Attempt real device deactivation
+                if cfg and student.essl_uid:
+                    success, msg = bs.deactivate_user(cfg.ip_address, cfg.port, student.essl_uid)
+                else:
+                    success, msg = False, "No device config or ESSL UID"
+
                 student.biometric_enabled = False
                 log = BiometricLog(
                     student_id=student.id,
                     event_type="sync",
-                    notes="Auto-deactivated: plan expired",
+                    notes=f"Auto-deactivated (plan expired): {msg}",
                 )
                 db.session.add(log)
 

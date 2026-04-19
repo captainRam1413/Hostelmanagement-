@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 :root {
   color-scheme: dark;
 }
@@ -14,80 +16,120 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  background: linear-gradient(135deg, #0a0812 0%, #130d2e 30%, #1a0a3d 60%, #0d1a3d 100%);
   min-height: 100vh;
   color: #e2e8f0;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(168, 85, 247, 0.5);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(168, 85, 247, 0.8);
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.5); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.8); }
 
-/* Glass card */
+/* ── Glass card ─────────────────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.09);
   border-radius: 1rem;
 }
 
-/* Neon input */
+/* ── Neon input ─────────────────────────────────────────────────────────── */
 .neon-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  border-radius: 0.5rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(168,85,247,0.25);
+  border-radius: 0.625rem;
   color: #e2e8f0;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .neon-input:focus {
   outline: none;
   border-color: #a855f7;
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 14px rgba(168,85,247,0.35);
+}
+.neon-input option {
+  background: #1a1040;
+  color: #e2e8f0;
 }
 
-/* Neon button */
+/* ── Neon button ─────────────────────────────────────────────────────────── */
 .btn-neon {
   background: linear-gradient(135deg, #7c3aed, #2563eb);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0.625rem;
   color: white;
   font-weight: 600;
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-neon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  pointer-events: none;
 }
 .btn-neon:hover {
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+  box-shadow: 0 0 24px rgba(124,58,237,0.65), 0 0 48px rgba(124,58,237,0.2);
   transform: translateY(-1px);
 }
-.btn-neon:active {
-  transform: translateY(0);
+.btn-neon:active { transform: translateY(0); }
+
+/* ── Shadow neon (sidebar active item, icon boxes) ──────────────────────── */
+.shadow-neon {
+  box-shadow: 0 0 16px rgba(168,85,247,0.45), 0 0 32px rgba(168,85,247,0.15);
 }
 
-/* Status badges */
+/* ── Status badges ──────────────────────────────────────────────────────── */
 .badge-active {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16,185,129,0.15);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  border: 1px solid rgba(16,185,129,0.35);
 }
 .badge-expired {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239,68,68,0.15);
   color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(239,68,68,0.35);
 }
 .badge-pending {
-  background: rgba(234, 179, 8, 0.2);
+  background: rgba(234,179,8,0.15);
   color: #eab308;
-  border: 1px solid rgba(234, 179, 8, 0.4);
+  border: 1px solid rgba(234,179,8,0.35);
+}
+
+/* ── Animated gradient border on active form fields ─────────────────────── */
+@keyframes neon-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(168,85,247,0.3); }
+  50%       { box-shadow: 0 0 20px rgba(168,85,247,0.6); }
+}
+
+/* ── Fingerprint scan animation overlay ────────────────────────────────── */
+@keyframes scan-line {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+.scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+/* ── Skeleton loading ────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
