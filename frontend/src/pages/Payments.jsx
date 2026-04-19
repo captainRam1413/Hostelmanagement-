@@ -168,43 +168,43 @@ export default function Payments() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Payments</h1>
-          <p className="text-slate-400 text-sm mt-1">{payments.length} records</p>
+          <h1 className="text-[24px] font-black text-black dark:text-white tracking-tight">Payments</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{payments.length} records</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 glass-card border border-white/10 rounded-xl hover:bg-white/5">
+          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-slate-800 text-black dark:text-white border border-slate-200 dark:border-slate-700 rounded-[12px] font-bold shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
             <Download className="w-4 h-4" /> Export CSV
           </button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowModal(true)}
-            className="btn-neon flex items-center gap-2 px-4 py-2 text-sm"
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-dash-green text-white rounded-[12px] font-bold shadow-md hover:bg-dash-green/90 transition-colors"
           >
             <Plus className="w-4 h-4" /> Record Payment
           </motion.button>
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-[20px] overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-dash-green border-t-transparent rounded-full animate-spin" />
           </div>
         ) : payments.length === 0 ? (
           <div className="text-center py-12 text-slate-500">No payments recorded yet.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10 text-slate-400">
-                  <th className="px-6 py-4 text-left font-medium">Student</th>
-                  <th className="px-6 py-4 text-left font-medium">Amount</th>
-                  <th className="px-6 py-4 text-left font-medium">Plan</th>
-                  <th className="px-6 py-4 text-left font-medium">Paid Date</th>
-                  <th className="px-6 py-4 text-left font-medium">Valid Until</th>
-                  <th className="px-6 py-4 text-left font-medium">Notes</th>
-                  <th className="px-6 py-4 text-right font-medium">Actions</th>
+              <thead className="bg-slate-50 dark:bg-slate-900/50">
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Plan</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Paid Date</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Valid Until</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Notes</th>
+                  <th className="px-6 py-4 text-right font-bold text-[12px] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -214,18 +214,18 @@ export default function Payments() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: i * 0.03 }}
-                    className="border-b border-white/5 hover:bg-white/5"
+                    className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="px-6 py-4 text-white font-medium">{p.student_name}</td>
-                    <td className="px-6 py-4 text-emerald-400 font-semibold">₹{p.amount?.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-slate-300 capitalize">{p.plan_type}</td>
-                    <td className="px-6 py-4 text-slate-300">{p.paid_date}</td>
-                    <td className="px-6 py-4 text-slate-300">{p.end_date}</td>
-                    <td className="px-6 py-4 text-slate-400 max-w-[160px] truncate">{p.notes || '—'}</td>
+                    <td className="px-6 py-4 text-black dark:text-white font-bold text-[13px]">{p.student_name}</td>
+                    <td className="px-6 py-4 text-emerald-600 dark:text-emerald-400 font-bold text-[13px]">₹{p.amount?.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-[13px] capitalize">{p.plan_type}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-[13px]">{p.paid_date}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 text-[13px]">{p.end_date}</td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-[13px] max-w-[160px] truncate">{p.notes || '—'}</td>
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => deletePayment(p.id)}
-                        className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

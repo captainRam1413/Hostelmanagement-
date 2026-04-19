@@ -1,106 +1,130 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, Users, CreditCard, DoorOpen,
-  Fingerprint, FileText, LogOut, Building2,
+  BarChart2, PieChart, Handshake, CheckSquare, List, Smile,
+  Menu, Settings, Bell, Activity, Sun, Moon, LogOut, Hexagon
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard', end: true },
-  { to: '/students', icon: Users, label: 'Students' },
-  { to: '/payments', icon: CreditCard, label: 'Payments' },
-  { to: '/rooms', icon: DoorOpen, label: 'Rooms' },
-  { to: '/biometric', icon: Fingerprint, label: 'Biometric' },
-  { to: '/logs', icon: FileText, label: 'Logs & Reports' },
+  { to: '/', icon: BarChart2, end: true },
+  { to: '/students', icon: PieChart },
+  { to: '/payments', icon: Handshake },
+  { to: '/rooms', icon: CheckSquare },
+  { to: '/biometric', icon: List },
 ]
 
 export default function Layout() {
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { theme, toggleTheme } = useTheme()
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    // window.location.href = '/login' since we don't have useNavigate imported here
+    window.location.href = '/login'
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-white text-dash-text dark:bg-slate-900 dark:text-white transition-colors duration-200 font-sans">
+      
+      {/* Floating Side Navigation */}
       <motion.aside
-        initial={{ x: -80, opacity: 0 }}
+        initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className="w-64 flex-shrink-0 flex flex-col glass-card rounded-none border-r border-white/10"
-        style={{ borderRadius: 0 }}
+        className="w-[70px] bg-dash-green rounded-r-[32px] flex flex-col items-center py-8 shadow-lg my-12"
       >
-        {/* Logo */}
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-neon">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-sm font-bold text-white leading-tight">RM Ladies</h1>
-              <p className="text-xs text-purple-300">Hostel Management</p>
-            </div>
-          </div>
+        <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center mb-8">
+          <BarChart2 className="w-5 h-5 text-white" />
         </div>
-
-        {/* Nav */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label, end }) => (
+        <nav className="flex flex-col gap-6">
+          {navItems.map(({ to, icon: Icon, end }, idx) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-purple-600/30 text-purple-200 shadow-neon border border-purple-500/30'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                `w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                  isActive ? 'bg-white/20' : 'hover:bg-white/10'
                 }`
               }
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {label}
+              <Icon className="w-5 h-5 text-white opacity-90" />
             </NavLink>
           ))}
         </nav>
-
-        {/* User footer */}
-        <div className="p-4 border-t border-white/10">
-          <div className="flex items-center gap-3 mb-3 px-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
-              {user?.username?.[0]?.toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white font-medium truncate">{user?.username}</p>
-              <p className="text-xs text-purple-300 capitalize">{user?.role}</p>
-            </div>
-          </div>
-          <button
+        <div className="mt-auto pt-8">
+          <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-full transition-all hover:bg-white/10 group"
+            title="Sign Out"
           >
-            <LogOut className="w-4 h-4" />
-            Sign Out
+            <LogOut className="w-5 h-5 text-red-300 group-hover:text-red-200 transition-colors" />
           </button>
         </div>
       </motion.aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="p-6 min-h-full"
-        >
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden w-full px-4 lg:px-8">
+        
+        {/* Top Header */}
+        <header className="h-24 flex items-center justify-between shrink-0">
+          
+          <div className="flex items-center gap-6">
+            {/* Logo area */}
+            <div className="flex items-center gap-2">
+              <Hexagon className="w-8 h-8 text-dash-green fill-dash-green/30" />
+              <h1 className="text-[22px] font-black text-black tracking-tight dark:text-white">RM Ladies</h1>
+            </div>
+            
+            {/* Menu Button */}
+            <button className="flex items-center gap-2 px-4 py-2 rounded-[14px] bg-black text-white text-sm font-semibold shadow-md hover:bg-slate-800 transition-colors">
+              <Menu className="w-4 h-4" />
+              Menu
+            </button>
+          </div>
+
+          <div className="flex items-center gap-6">
+            {/* Utility Icons */}
+            <div className="flex items-center gap-4 text-dash-text dark:text-slate-400">
+              <button onClick={toggleTheme} className="hover:text-black dark:hover:text-white transition-colors">
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+              <button className="hover:text-black dark:hover:text-white transition-colors">
+                <Settings className="w-5 h-5" />
+              </button>
+              <button className="hover:text-black dark:hover:text-white transition-colors">
+                <Activity className="w-5 h-5" />
+              </button>
+              <button className="hover:text-black dark:hover:text-white transition-colors relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-0 right-0 w-2 h-2 bg-dash-red rounded-full"></span>
+              </button>
+            </div>
+
+            {/* Upgrade Button removed */}
+
+            {/* Profile */}
+            <div className="flex items-center gap-3 pl-2">
+              <div className="text-right">
+                <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">{user?.role || 'Admin'}</p>
+                <p className="text-sm font-bold text-black">{user?.username || 'Chao Xing'}</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden relative">
+                {/* Fallback image if no avatar */}
+                <img src={`https://ui-avatars.com/api/?name=${user?.username || 'Chao+Xing'}&background=e6ede9&color=1d3d2e`} alt="avatar" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto pb-8">
           <Outlet />
-        </motion.div>
-      </main>
+        </main>
+
+      </div>
     </div>
   )
 }

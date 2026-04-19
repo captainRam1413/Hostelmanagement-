@@ -5,10 +5,10 @@ import api from '../services/api'
 import toast from 'react-hot-toast'
 
 const EVENT_COLORS = {
-  entry: 'badge-active',
-  exit: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  sync: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  denied: 'badge-expired',
+  entry: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30',
+  exit: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30',
+  sync: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30',
+  denied: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30',
 }
 
 export default function LogsReports() {
@@ -29,8 +29,8 @@ export default function LogsReports() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Logs & Reports</h1>
-        <p className="text-slate-400 text-sm mt-1">Entry/exit logs and exportable reports</p>
+        <h1 className="text-2xl font-bold text-black dark:text-white">Logs & Reports</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Entry/exit logs and exportable reports</p>
       </div>
 
       {/* Export Buttons */}
@@ -49,26 +49,28 @@ export default function LogsReports() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             whileHover={{ scale: 1.02 }}
-            className={`glass-card p-5 flex items-center gap-3 cursor-pointer border border-white/10 hover:border-white/20 transition-all`}
+            className={`bg-white dark:bg-slate-800 p-5 flex items-center gap-3 cursor-pointer rounded-[14px] border border-slate-200 dark:border-slate-700 shadow-sm transition-all`}
           >
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center flex-shrink-0`}>
+            <div className={`w-10 h-10 rounded-[10px] ${
+              i === 0 ? 'bg-dash-red' : i === 1 ? 'bg-dash-blue' : 'bg-dash-green'
+            } flex items-center justify-center flex-shrink-0`}>
               <Download className="w-5 h-5 text-white" />
             </div>
-            <span className="text-sm font-medium text-white">{label}</span>
+            <span className="text-sm font-bold text-black dark:text-white">{label}</span>
           </motion.a>
         ))}
       </div>
 
       {/* Logs Table */}
-      <div className="glass-card overflow-hidden">
-        <div className="p-4 border-b border-white/10 flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-white flex-1">Biometric Activity Logs</h2>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400" />
+      <div className="bg-white dark:bg-slate-800 rounded-[20px] overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
+          <h2 className="text-[18px] font-black text-black dark:text-white">Biometric Activity Logs</h2>
+          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3">
+            <Filter className="w-4 h-4 text-slate-500" />
             <select
               value={eventFilter}
               onChange={(e) => setEventFilter(e.target.value)}
-              className="neon-input py-1.5 px-3 text-xs"
+              className="bg-transparent py-2 text-[13px] font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
             >
               <option value="">All Events</option>
               <option value="entry">Entry</option>
@@ -88,13 +90,13 @@ export default function LogsReports() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="text-slate-400 border-b border-white/10">
-                  <th className="px-6 py-3 text-left font-medium">Timestamp</th>
-                  <th className="px-6 py-3 text-left font-medium">Student</th>
-                  <th className="px-6 py-3 text-left font-medium">Event</th>
-                  <th className="px-6 py-3 text-left font-medium">Device</th>
-                  <th className="px-6 py-3 text-left font-medium">Notes</th>
+              <thead className="bg-slate-50 dark:bg-slate-900/50">
+                <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Timestamp</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Event</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Device</th>
+                  <th className="px-6 py-4 text-left font-bold text-[12px] uppercase tracking-wider">Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,19 +106,19 @@ export default function LogsReports() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: Math.min(i * 0.02, 0.5) }}
-                    className="border-b border-white/5 hover:bg-white/5"
+                    className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   >
-                    <td className="px-6 py-3 text-slate-300 text-xs font-mono">
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-xs font-mono font-medium">
                       {new Date(log.timestamp).toLocaleString()}
                     </td>
-                    <td className="px-6 py-3 text-white font-medium">{log.student_name}</td>
-                    <td className="px-6 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full border font-medium ${EVENT_COLORS[log.event_type] || 'badge-pending'}`}>
+                    <td className="px-6 py-4 text-black dark:text-white font-bold text-[13px]">{log.student_name}</td>
+                    <td className="px-6 py-4">
+                      <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold ${EVENT_COLORS[log.event_type] || 'badge-pending'}`}>
                         {log.event_type}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-slate-400 font-mono text-xs">{log.device_id || '—'}</td>
-                    <td className="px-6 py-3 text-slate-400 max-w-[240px] truncate">{log.notes || '—'}</td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">{log.device_id || '—'}</td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 text-[13px] max-w-[240px] truncate">{log.notes || '—'}</td>
                   </motion.tr>
                 ))}
               </tbody>

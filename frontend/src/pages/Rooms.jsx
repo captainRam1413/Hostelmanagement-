@@ -122,14 +122,14 @@ export default function Rooms() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Rooms</h1>
-          <p className="text-slate-400 text-sm mt-1">{rooms.length} rooms registered</p>
+          <h1 className="text-[24px] font-black text-black dark:text-white tracking-tight">Rooms</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{rooms.length} rooms registered</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={openAdd}
-          className="btn-neon flex items-center gap-2 px-4 py-2 text-sm"
+          className="flex items-center gap-2 px-4 py-2 text-sm bg-dash-green text-white rounded-[12px] font-bold shadow-md hover:bg-dash-green/90 transition-colors"
         >
           <Plus className="w-4 h-4" /> Add Room
         </motion.button>
@@ -150,28 +150,28 @@ export default function Rooms() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="glass-card p-5"
+                className="bg-white dark:bg-slate-800 rounded-[20px] p-5 border border-slate-200 dark:border-slate-700 shadow-sm"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-lg font-bold text-white">Room {room.room_number}</h3>
-                    <p className="text-xs text-slate-400">Floor: {room.floor || '—'}</p>
+                    <h3 className="text-[16px] font-black text-black dark:text-white">Room {room.room_number}</h3>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-bold">Floor: {room.floor || '—'}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full border font-medium ${isFull ? 'badge-expired' : 'badge-active'}`}>
+                  <span className={`text-[11px] px-2 py-1 rounded-full border font-bold ${isFull ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30' : 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'}`}>
                     {isFull ? 'Full' : 'Available'}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <Users className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm text-slate-300">
+                  <Users className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                  <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
                     {room.occupied}/{room.capacity} occupied
                   </span>
                 </div>
 
-                <div className="w-full bg-white/10 rounded-full h-1.5 mb-4">
+                <div className="w-full bg-slate-100 dark:bg-white/10 rounded-full h-2 mb-5">
                   <div
-                    className="h-1.5 rounded-full transition-all"
+                    className="h-2 rounded-full transition-all"
                     style={{
                       width: `${pct}%`,
                       background: pct >= 100 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#10b981',
@@ -182,13 +182,13 @@ export default function Rooms() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => openEdit(room)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:text-blue-400 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 rounded-xl transition-colors"
                   >
                     <Edit2 className="w-3.5 h-3.5" /> Edit
                   </button>
                   <button
                     onClick={() => deleteRoom(room.id, room.room_number)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 dark:text-red-400 dark:bg-red-500/10 dark:hover:bg-red-500/20 rounded-xl transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Delete
                   </button>

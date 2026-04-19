@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -10,6 +11,14 @@ export default {
           blue: '#3b82f6',
           cyan: '#06b6d4',
           pink: '#ec4899',
+        },
+        dash: {
+          red: '#d9383a',
+          blue: '#1b4e84',
+          green: '#3c614b',
+          yellow: '#e3a91e',
+          hero: '#e6ede9',
+          text: '#1d3d2e',
         },
       },
       backgroundImage: {
