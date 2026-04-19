@@ -23,7 +23,8 @@ def _get_zk(ip: str, port: int = 4370, timeout: int = 10):
     """Return an *unconnected* ZK instance."""
     if not ZK_AVAILABLE:
         raise RuntimeError("pyzk is not installed")
-    return ZK(ip, port=port, timeout=timeout, password=0, force_udp=False, ommit_ping=False)
+        
+    return ZK(ip, port=port, timeout=timeout, password=0, force_udp=True, ommit_ping=False)
 
 
 # ── Public API ──────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ def test_connection(ip: str, port: int = 4370):
                 "serial_number": conn.get_serialnumber(),
                 "firmware_version": conn.get_firmware_version(),
                 "platform": conn.get_platform(),
-                "users": conn.get_user_count(),
+                "users": len(conn.get_users()),
             }
         finally:
             conn.disconnect()
@@ -67,8 +68,14 @@ def enroll_user(ip: str, port: int, uid: int, user_id: str, name: str):
         try:
             conn.disable_device()
             # Create / update user record on device
-            conn.set_user(uid=uid, name=name[:24], privilege=zk_const.USER_DEFAULT,
-                          password="", group_id="", user_id=str(user_id))
+            conn.set_user(
+                uid=uid,
+                name=name[:24],
+                privilege=zk_const.USER_DEFAULT,
+                password="",
+                group_id="0",
+                user_id=str(user_id),
+            )
             # Enroll fingerprint – finger=0, new_enrollment=True blocks until scan
             conn.enroll_user(uid=uid, temp_id=0)
             conn.enable_device()
@@ -91,7 +98,7 @@ def activate_user(ip: str, port: int, uid: int, user_id: str, name: str):
         try:
             conn.disable_device()
             conn.set_user(uid=uid, name=name[:24], privilege=zk_const.USER_DEFAULT,
-                          password="", group_id="", user_id=str(user_id))
+                          password="", group_id="0", user_id=str(user_id))
             conn.enable_device()
         finally:
             conn.disconnect()
@@ -146,6 +153,33 @@ def pull_attendance_logs(ip: str, port: int):
         return True, logs
     except Exception as exc:
         logger.error("pull_attendance_logs failed: %s", exc)
+        return False, str(exc)
+
+
+def pull_users(ip: str, port: int):
+    """
+    Fetch all users from the device.
+    Returns (success, list_of_dicts | message).
+    """
+    try:
+        zk = _get_zk(ip, port)
+        conn = zk.connect()
+        try:
+            users = conn.get_users()
+            user_list = []
+            for u in users:
+                user_list.append({
+                    "uid": u.uid,
+                    "user_id": u.user_id,
+                    "name": u.name,
+                    "privilege": u.privilege,
+                    "group_id": u.group_id,
+                })
+        finally:
+            conn.disconnect()
+        return True, user_list
+    except Exception as exc:
+        logger.error("pull_users failed: %s", exc)
         return False, str(exc)
 
 

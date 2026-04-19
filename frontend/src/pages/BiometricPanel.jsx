@@ -21,6 +21,7 @@ export default function BiometricPanel() {
   const [syncingId, setSyncingId] = useState(null)
   const [testLoading, setTestLoading] = useState(false)
   const [pullLoading, setPullLoading] = useState(false)
+  const [pullUsersLoading, setPullUsersLoading] = useState(false)
   const [restartLoading, setRestartLoading] = useState(false)
   const [clearLoading, setClearLoading] = useState(false)
   const [deviceForm, setDeviceForm] = useState({ ip_address: '', port: 4370 })
@@ -87,6 +88,19 @@ export default function BiometricPanel() {
       toast.error(err.response?.data?.error || 'Pull logs failed')
     } finally {
       setPullLoading(false)
+    }
+  }
+
+  const pullUsers = async () => {
+    setPullUsersLoading(true)
+    try {
+      const res = await api.post('/biometric/device/pull-users')
+      toast.success(`Imported ${res.data.imported}, Updated ${res.data.updated} users`)
+      fetchData()
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Pull users failed')
+    } finally {
+      setPullUsersLoading(false)
     }
   }
 
@@ -470,6 +484,15 @@ export default function BiometricPanel() {
                   bg="bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40"
                   loading={pullLoading}
                   onClick={pullLogs}
+                />
+                <ActionCard
+                  icon={Download}
+                  label="Pull Device Users"
+                  desc="Fetch existing device users into DB"
+                  color="text-purple-400"
+                  bg="bg-purple-500/10 border-purple-500/20 hover:border-purple-500/40"
+                  loading={pullUsersLoading}
+                  onClick={pullUsers}
                 />
                 <ActionCard
                   icon={RotateCcw}

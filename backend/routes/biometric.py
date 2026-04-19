@@ -110,14 +110,14 @@ def enroll_user(student_id):
     student = Student.query.get_or_404(student_id)
     cfg = _get_device_cfg()
 
-    # Assign a UID if not already set
     if not student.essl_uid:
-        # Try to get next available UID from device; fallback to DB-based
+        # Get next available UID from device
+        next_uid = bs.get_next_uid(cfg.ip_address, cfg.port)
+        # Ensure it does not conflict with DB
         existing_uids = {s.essl_uid for s in Student.query.filter(Student.essl_uid.isnot(None)).all()}
-        uid = 1
-        while uid in existing_uids:
-            uid += 1
-        student.essl_uid = uid
+        while next_uid in existing_uids:
+            next_uid += 1
+        student.essl_uid = next_uid
         db.session.flush()
 
     success, msg = bs.enroll_user(
@@ -223,6 +223,65 @@ def pull_device_logs():
         "success": True,
         "imported": imported,
         "last_sync": cfg.last_sync.isoformat(),
+    }), 200
+
+
+@biometric_bp.route("/device/pull-users", methods=["POST"])
+@jwt_required()
+def pull_device_users():
+    """Fetch users from the ESSL device and sync them into the DB."""
+    cfg = _get_device_cfg()
+    success, data = bs.pull_users(cfg.ip_address, cfg.port)
+
+    if not success:
+        return jsonify({"success": False, "error": data}), 503
+
+    imported = 0
+    updated = 0
+    for u in data:
+        uid = u.get("uid")
+        user_id = str(u.get("user_id"))
+        name = u.get("name") or f"Device User {uid}"
+
+        # Try to find existing student by essl_uid
+        student = Student.query.filter_by(essl_uid=uid).first()
+        if not student:
+            # Try to find by DB id if user_id is a number
+            if user_id.isdigit():
+                student = Student.query.filter_by(id=int(user_id)).first()
+
+        if student:
+            # Update
+            if not student.essl_uid:
+                student.essl_uid = uid
+            student.biometric_enabled = True
+            if not student.biometric_id:
+                student.biometric_id = str(uid)
+            updated += 1
+        else:
+            # Create new student
+            student = Student(
+                name=name,
+                email=f"user{uid}@device.local",
+                phone=f"000000{uid:04d}",
+                room_number="TBD",
+                payment_status="active",
+                essl_uid=uid,
+                biometric_enabled=True,
+                biometric_id=str(uid)
+            )
+            db.session.add(student)
+            imported += 1
+
+    cfg.last_sync = datetime.utcnow()
+    cfg.status = "connected"
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "imported": imported,
+        "updated": updated,
+        "total_device_users": len(data)
     }), 200
 
 
