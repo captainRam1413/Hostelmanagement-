@@ -1,6 +1,7 @@
 import io
 import csv
 from datetime import date
+from collections import defaultdict
 from flask import Blueprint, request, jsonify, make_response
 from flask_jwt_extended import jwt_required
 from extensions import db
@@ -13,6 +14,7 @@ reports_bp = Blueprint("reports", __name__)
 @jwt_required()
 def dashboard():
     today = date.today()
+    year = today.year
     total_students = Student.query.count()
     active = Student.query.filter(Student.payment_status == "active").count()
     expired = Student.query.filter(Student.payment_status == "expired").count()
@@ -39,6 +41,33 @@ def dashboard():
     total_rooms = Room.query.count()
     occupied_rooms = db.session.query(Room).filter(Room.occupied > 0).count()
 
+    monthly_checkins = defaultdict(int)
+    monthly_payments = defaultdict(int)
+
+    year_logs = BiometricLog.query.filter(
+        db.extract("year", BiometricLog.timestamp) == year
+    ).all()
+    for log in year_logs:
+        month = log.timestamp.month
+        monthly_checkins[month] += 1
+
+    year_payments = Payment.query.filter(
+        db.extract("year", Payment.created_at) == year
+    ).all()
+    for payment in year_payments:
+        month = payment.created_at.month
+        monthly_payments[month] += 1
+
+    month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    monthly_activity = [
+        {
+            "name": month_labels[index - 1],
+            "CheckIns": monthly_checkins.get(index, 0),
+            "Payments": monthly_payments.get(index, 0),
+        }
+        for index in range(1, 13)
+    ]
+
     return jsonify({
         "total_students": total_students,
         "active": active,
@@ -46,6 +75,7 @@ def dashboard():
         "expiring_soon": expiring_soon,
         "total_rooms": total_rooms,
         "occupied_rooms": occupied_rooms,
+        "monthly_activity": monthly_activity,
         "recent_logs": [l.to_dict() for l in recent_logs],
         "expiring_students": [s.to_dict() for s in expiring_students],
     }), 200

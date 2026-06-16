@@ -30,6 +30,47 @@ def _log(student_id, event_type, notes, device_id=None):
     db.session.add(log)
 
 
+def _safe_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _upsert_student_from_device(uid=None, user_id=None, name=None):
+    """Find or create student using device identifiers."""
+    uid_int = _safe_int(uid)
+    user_id_int = _safe_int(user_id)
+
+    student = None
+    if uid_int is not None:
+        student = Student.query.filter_by(essl_uid=uid_int).first()
+    if not student and user_id_int is not None:
+        student = Student.query.filter_by(id=user_id_int).first()
+
+    if student:
+        if student.essl_uid is None and uid_int is not None:
+            student.essl_uid = uid_int
+        student.biometric_enabled = True
+        if not student.biometric_id and uid_int is not None:
+            student.biometric_id = str(uid_int)
+        return student, False
+
+    label = name or f"Device User {uid_int if uid_int is not None else (user_id if user_id is not None else 'unknown')}"
+    student = Student(
+        name=label,
+        email=(f"user{uid_int}@device.local" if uid_int is not None else None),
+        phone=(f"000000{uid_int:04d}" if uid_int is not None else None),
+        payment_status="active",
+        essl_uid=uid_int,
+        biometric_enabled=True,
+        biometric_id=(str(uid_int) if uid_int is not None else None),
+    )
+    db.session.add(student)
+    db.session.flush()
+    return student, True
+
+
 # ── Device Config endpoints ──────────────────────────────────────────────────
 
 @biometric_bp.route("/device", methods=["GET"])
@@ -42,7 +83,7 @@ def get_device_config():
 @biometric_bp.route("/device", methods=["PUT"])
 @jwt_required()
 def update_device_config():
-    data = request.get_json()
+    data = request.get_json() or {}
     cfg = _get_device_cfg()
     if data.get("ip_address"):
         cfg.ip_address = data["ip_address"]
@@ -200,10 +241,18 @@ def pull_device_logs():
         return jsonify({"success": False, "error": data}), 503
 
     imported = 0
+    created_students = 0
     for entry in data:
-        student = Student.query.filter_by(id=entry.get("user_id")).first()
+        user_id_int = _safe_int(entry.get("user_id"))
+        uid_int = _safe_int(entry.get("uid"))
+
+        student = Student.query.filter_by(id=user_id_int).first() if user_id_int is not None else None
         if not student:
-            student = Student.query.filter_by(essl_uid=entry.get("uid")).first()
+            student = Student.query.filter_by(essl_uid=uid_int).first() if uid_int is not None else None
+        if not student:
+            student, created = _upsert_student_from_device(uid=uid_int, user_id=user_id_int)
+            if created:
+                created_students += 1
 
         log = BiometricLog(
             student_id=student.id if student else None,
@@ -222,6 +271,7 @@ def pull_device_logs():
     return jsonify({
         "success": True,
         "imported": imported,
+        "created_students": created_students,
         "last_sync": cfg.last_sync.isoformat(),
     }), 200
 
@@ -239,39 +289,15 @@ def pull_device_users():
     imported = 0
     updated = 0
     for u in data:
-        uid = u.get("uid")
-        user_id = str(u.get("user_id"))
-        name = u.get("name") or f"Device User {uid}"
-
-        # Try to find existing student by essl_uid
-        student = Student.query.filter_by(essl_uid=uid).first()
-        if not student:
-            # Try to find by DB id if user_id is a number
-            if user_id.isdigit():
-                student = Student.query.filter_by(id=int(user_id)).first()
-
-        if student:
-            # Update
-            if not student.essl_uid:
-                student.essl_uid = uid
-            student.biometric_enabled = True
-            if not student.biometric_id:
-                student.biometric_id = str(uid)
-            updated += 1
-        else:
-            # Create new student
-            student = Student(
-                name=name,
-                email=f"user{uid}@device.local",
-                phone=f"000000{uid:04d}",
-                room_number="TBD",
-                payment_status="active",
-                essl_uid=uid,
-                biometric_enabled=True,
-                biometric_id=str(uid)
-            )
-            db.session.add(student)
+        student, created = _upsert_student_from_device(
+            uid=u.get("uid"),
+            user_id=u.get("user_id"),
+            name=u.get("name"),
+        )
+        if created:
             imported += 1
+        else:
+            updated += 1
 
     cfg.last_sync = datetime.utcnow()
     cfg.status = "connected"
@@ -316,7 +342,7 @@ def sync_student(student_id):
 @jwt_required()
 def override_access(student_id):
     student = Student.query.get_or_404(student_id)
-    data = request.get_json()
+    data = request.get_json() or {}
     enable = data.get("enable", False)
     cfg = _get_device_cfg()
 
@@ -339,8 +365,62 @@ def override_access(student_id):
 @biometric_bp.route("/sync-all", methods=["POST"])
 @jwt_required()
 def sync_all():
-    students = Student.query.all()
     cfg = _get_device_cfg()
+
+    # 1) Pull users from device and upsert into local DB.
+    users_ok, users_data = bs.pull_users(cfg.ip_address, cfg.port)
+    if not users_ok:
+        cfg.status = "disconnected"
+        db.session.commit()
+        return jsonify({"success": False, "error": users_data}), 503
+
+    imported = 0
+    updated = 0
+    for u in users_data:
+        _, created = _upsert_student_from_device(
+            uid=u.get("uid"),
+            user_id=u.get("user_id"),
+            name=u.get("name"),
+        )
+        if created:
+            imported += 1
+        else:
+            updated += 1
+
+    # 2) Pull attendance logs and store all records locally.
+    logs_ok, logs_data = bs.pull_attendance_logs(cfg.ip_address, cfg.port)
+    if not logs_ok:
+        cfg.status = "disconnected"
+        db.session.commit()
+        return jsonify({
+            "success": False,
+            "error": logs_data,
+            "imported_users": imported,
+            "updated_users": updated,
+        }), 503
+
+    logs_imported = 0
+    logs_created_students = 0
+    for entry in logs_data:
+        student, created = _upsert_student_from_device(
+            uid=entry.get("uid"),
+            user_id=entry.get("user_id"),
+        )
+        if created:
+            logs_created_students += 1
+
+        log = BiometricLog(
+            student_id=student.id if student else None,
+            event_type="entry" if entry.get("punch") in (0, 4) else "exit",
+            timestamp=datetime.fromisoformat(entry["timestamp"]) if entry.get("timestamp") else datetime.utcnow(),
+            device_id=str(cfg.ip_address),
+            notes=f"Pulled from device. Status={entry.get('status')} Punch={entry.get('punch')}",
+        )
+        db.session.add(log)
+        logs_imported += 1
+
+    # 3) Sync access state for all known students based on payment status.
+    students = Student.query.all()
     results = []
     for student in students:
         enable = student.payment_status == "active"
@@ -355,8 +435,90 @@ def sync_all():
             student.biometric_enabled = enable
             _log(student.id, "sync", f"Batch sync: {msg}")
         results.append({"student_id": student.id, "name": student.name, "success": success, "message": msg})
+
+    cfg.status = "connected"
+    cfg.last_sync = datetime.utcnow()
     db.session.commit()
-    return jsonify({"synced": len(results), "results": results}), 200
+    return jsonify({
+        "success": True,
+        "synced": len(results),
+        "results": results,
+        "imported_users": imported,
+        "updated_users": updated,
+        "logs_imported": logs_imported,
+        "logs_created_students": logs_created_students,
+        "last_sync": cfg.last_sync.isoformat(),
+    }), 200
+
+
+@biometric_bp.route("/device/import-all", methods=["POST"])
+@jwt_required()
+def import_all_from_device():
+    """Import all users and logs from device into DB without changing access states."""
+    cfg = _get_device_cfg()
+
+    users_ok, users_data = bs.pull_users(cfg.ip_address, cfg.port)
+    if not users_ok:
+        cfg.status = "disconnected"
+        db.session.commit()
+        return jsonify({"success": False, "error": users_data}), 503
+
+    imported_users = 0
+    updated_users = 0
+    for u in users_data:
+        _, created = _upsert_student_from_device(
+            uid=u.get("uid"),
+            user_id=u.get("user_id"),
+            name=u.get("name"),
+        )
+        if created:
+            imported_users += 1
+        else:
+            updated_users += 1
+
+    logs_ok, logs_data = bs.pull_attendance_logs(cfg.ip_address, cfg.port)
+    if not logs_ok:
+        cfg.status = "disconnected"
+        db.session.commit()
+        return jsonify({
+            "success": False,
+            "error": logs_data,
+            "imported_users": imported_users,
+            "updated_users": updated_users,
+        }), 503
+
+    logs_imported = 0
+    logs_created_students = 0
+    for entry in logs_data:
+        student, created = _upsert_student_from_device(
+            uid=entry.get("uid"),
+            user_id=entry.get("user_id"),
+        )
+        if created:
+            logs_created_students += 1
+
+        log = BiometricLog(
+            student_id=student.id if student else None,
+            event_type="entry" if entry.get("punch") in (0, 4) else "exit",
+            timestamp=datetime.fromisoformat(entry["timestamp"]) if entry.get("timestamp") else datetime.utcnow(),
+            device_id=str(cfg.ip_address),
+            notes=f"Pulled from device. Status={entry.get('status')} Punch={entry.get('punch')}",
+        )
+        db.session.add(log)
+        logs_imported += 1
+
+    cfg.status = "connected"
+    cfg.last_sync = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "imported_users": imported_users,
+        "updated_users": updated_users,
+        "logs_imported": logs_imported,
+        "logs_created_students": logs_created_students,
+        "last_sync": cfg.last_sync.isoformat(),
+    }), 200
 
 
 # ── Log endpoints ────────────────────────────────────────────────────────────
@@ -382,7 +544,7 @@ def get_logs():
 @jwt_required()
 def add_log():
     """Receive entry/exit events pushed from biometric device."""
-    data = request.get_json()
+    data = request.get_json() or {}
     biometric_id = data.get("biometric_id")
     student = None
     if biometric_id:

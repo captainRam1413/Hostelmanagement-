@@ -5,22 +5,6 @@ import api from '../services/api'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 
-// Mock data for the chart
-const chartData = [
-  { name: 'Jan', Images: 2000, Documents: 3000 },
-  { name: 'Feb', Images: 3500, Documents: 4000 },
-  { name: 'Mar', Images: 1500, Documents: 2000 },
-  { name: 'Apr', Images: 4000, Documents: 3000 },
-  { name: 'May', Images: 2000, Documents: 1500 },
-  { name: 'Jun', Images: 4500, Documents: 3500 },
-  { name: 'Jul', Images: 3000, Documents: 5500 },
-  { name: 'Aug', Images: 2500, Documents: 3000 },
-  { name: 'Sep', Images: 4000, Documents: 2500 },
-  { name: 'Oct', Images: 5000, Documents: 4000 },
-  { name: 'Nov', Images: 6000, Documents: 7000 },
-  { name: 'Dec', Images: 3000, Documents: 4000 },
-]
-
 function XIcon() {
   return (
     <div className="w-10 h-10 rounded-full border-[1.5px] border-white/50 flex items-center justify-center">
@@ -52,7 +36,7 @@ function BottomCard({ title, value, percentage, colorClass }) {
       <div className="flex justify-between items-start mb-2">
         <p className={`text-[28px] font-black ${colorClass}`}>{value}</p>
         <div className={`px-2 py-0.5 text-[11px] font-bold ${colorClass} bg-current/10 flex items-center gap-1`}>
-          {percentage} <span className="text-[10px]">↗</span>
+          {percentage}
         </div>
       </div>
       <p className="text-[13px] font-bold text-black dark:text-slate-300">{title}</p>
@@ -80,6 +64,16 @@ export default function Dashboard() {
     )
   }
 
+  const occupiedRate = data?.total_rooms
+    ? Math.round((data.occupied_rooms / data.total_rooms) * 100)
+    : 0
+
+  const activeRate = data?.total_students
+    ? Math.round((data.active / data.total_students) * 100)
+    : 0
+
+  const monthlyActivity = data?.monthly_activity || []
+
   return (
     <div className="space-y-6 max-w-6xl">
       
@@ -93,7 +87,7 @@ export default function Dashboard() {
           <h1 className="text-[26px] font-black mt-1 text-dash-text dark:text-white tracking-tight">My Dashboard</h1>
         </div>
         
-        <div className="flex items-center gap-12 pr-4">
+        <div className="flex items-center gap-12 pr-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="w-[50px] h-[40px] text-dash-red">
               <svg viewBox="0 0 50 40" className="w-full h-full" preserveAspectRatio="none">
@@ -102,9 +96,9 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[22px] font-black text-black dark:text-white leading-tight">
-                {(data?.active * 12000)?.toLocaleString() || '$650k'} <span className="text-[14px] text-slate-500 font-bold ml-0.5">↗</span>
+                {data?.active || 0} <span className="text-[14px] text-slate-500 font-bold ml-0.5">↗</span>
               </p>
-              <p className="text-[11px] text-black dark:text-slate-400 font-bold">Yearly Revenue</p>
+              <p className="text-[11px] text-black dark:text-slate-400 font-bold">Active Students</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -115,9 +109,9 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[22px] font-black text-black dark:text-white leading-tight">
-                {(data?.total_students * 12000)?.toLocaleString() || '$960k'} <span className="text-[14px] text-slate-500 font-bold ml-0.5">↗</span>
+                {data?.expired || 0} <span className="text-[14px] text-slate-500 font-bold ml-0.5">↘</span>
               </p>
-              <p className="text-[11px] text-black dark:text-slate-400 font-bold">Overall Income</p>
+              <p className="text-[11px] text-black dark:text-slate-400 font-bold">Expired Plans</p>
             </div>
           </div>
         </div>
@@ -126,27 +120,27 @@ export default function Dashboard() {
       {/* 4 Top Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <TopCard 
-          title="Following" 
-          value={data?.total_students || 3890} 
-          percentage="50%" 
+          title="Total Students" 
+          value={data?.total_students ?? 0} 
+          percentage="100%" 
           bgColor="bg-dash-red" 
         />
         <TopCard 
-          title="Followers" 
-          value={data?.active || 8360} 
-          percentage="50%" 
+          title="Active Plans" 
+          value={data?.active ?? 0} 
+          percentage={`${activeRate}%`} 
           bgColor="bg-dash-blue" 
         />
         <TopCard 
-          title="Shares" 
-          value={data?.occupied_rooms || 3660} 
-          percentage="70%" 
+          title="Occupied Rooms" 
+          value={data?.occupied_rooms ?? 0} 
+          percentage={`${occupiedRate}%`} 
           bgColor="bg-dash-green" 
         />
         <TopCard 
-          title="Trending" 
-          value={data?.expiring_soon || 6690} 
-          percentage="50%" 
+          title="Expiring in 7 Days" 
+          value={data?.expiring_soon ?? 0} 
+          percentage={data?.expiring_soon > 0 ? 'Alert' : 'Clear'} 
           bgColor="bg-dash-yellow" 
         />
       </div>
@@ -154,7 +148,7 @@ export default function Dashboard() {
       {/* Statistics Chart */}
       <div className="bg-white dark:bg-slate-800 rounded-[20px] p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[20px] font-black text-black dark:text-white">Statistics</h2>
+          <h2 className="text-[20px] font-black text-black dark:text-white">Monthly Activity</h2>
           <button className="flex items-center gap-2 px-3 py-1.5 border-2 border-dash-green/30 text-dash-text dark:text-white dark:border-slate-600 rounded-[8px] text-[13px] font-bold hover:bg-slate-50 transition-colors">
             <Download className="w-4 h-4" />
             Download
@@ -163,13 +157,13 @@ export default function Dashboard() {
         
         <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+            <AreaChart data={monthlyActivity} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="colorImages" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="colorCheckIns" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3c614b" stopOpacity={0.4}/>
                   <stop offset="95%" stopColor="#3c614b" stopOpacity={0}/>
                 </linearGradient>
-                <linearGradient id="colorDocuments" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="colorPayments" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#e5e7eb" stopOpacity={0.6}/>
                   <stop offset="95%" stopColor="#e5e7eb" stopOpacity={0.1}/>
                 </linearGradient>
@@ -180,8 +174,8 @@ export default function Dashboard() {
               <Tooltip 
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
-              <Area type="monotone" dataKey="Documents" stroke="#d1d5db" strokeWidth={3} fillOpacity={1} fill="url(#colorDocuments)" />
-              <Area type="monotone" dataKey="Images" stroke="#3c614b" strokeWidth={3} fillOpacity={1} fill="url(#colorImages)" />
+              <Area type="monotone" dataKey="Payments" stroke="#d1d5db" strokeWidth={3} fillOpacity={1} fill="url(#colorPayments)" />
+              <Area type="monotone" dataKey="CheckIns" stroke="#3c614b" strokeWidth={3} fillOpacity={1} fill="url(#colorCheckIns)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -189,11 +183,11 @@ export default function Dashboard() {
         <div className="flex justify-center gap-6 mt-4 text-[12px] font-bold text-black dark:text-white">
           <div className="flex items-center gap-2">
             <div className="w-[14px] h-[14px] rounded-full bg-dash-green"></div>
-            Images
+            Check-ins
           </div>
           <div className="flex items-center gap-2">
             <div className="w-[14px] h-[14px] rounded-full bg-slate-200"></div>
-            Documents
+            Payments
           </div>
         </div>
       </div>
@@ -201,27 +195,27 @@ export default function Dashboard() {
       {/* 4 Bottom Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <BottomCard 
-          title="Images Generated" 
-          value="36,000" 
-          percentage="98%" 
+          title="Total Rooms" 
+          value={`${data?.total_rooms || 0}`} 
+          percentage="Capacity" 
           colorClass="text-dash-red" 
         />
         <BottomCard 
-          title="Documents Created" 
-          value="45,000" 
-          percentage="83%" 
+          title="Available Rooms" 
+          value={`${Math.max((data?.total_rooms || 0) - (data?.occupied_rooms || 0), 0)}`} 
+          percentage="Ready" 
           colorClass="text-dash-blue" 
         />
         <BottomCard 
-          title="Files Generated" 
-          value="68,000" 
-          percentage="69%" 
+          title="Recent Biometric Logs" 
+          value={`${data?.recent_logs?.length || 0}`} 
+          percentage="Latest" 
           colorClass="text-dash-green" 
         />
         <BottomCard 
-          title="Prompts Generated" 
-          value="89,000" 
-          percentage="80%" 
+          title="Expiring Students" 
+          value={`${data?.expiring_students?.length || 0}`} 
+          percentage="Review" 
           colorClass="text-dash-yellow" 
         />
       </div>

@@ -1,8 +1,15 @@
 import sqlite3
+import os
 
 try:
-    conn = sqlite3.connect('hostel.db')
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    db_path = os.path.join(base_dir, 'hostel.db')
+    conn = sqlite3.connect(db_path)
     cur = conn.cursor()
+
+    def has_column(table_name, column_name):
+        cur.execute(f'PRAGMA table_info({table_name})')
+        return any(row[1] == column_name for row in cur.fetchall())
 
     # 1. Check existing columns on students table
     cur.execute('PRAGMA table_info(students)')
@@ -10,19 +17,19 @@ try:
     print('Existing student columns:', cols)
 
     # 2. Add essl_uid if missing
-    if 'essl_uid' not in cols:
+    if not has_column('students', 'essl_uid'):
         cur.execute('ALTER TABLE students ADD COLUMN essl_uid INTEGER')
         print('Added essl_uid to students table.')
     else:
         print('essl_uid already exists.')
         
-    if 'address' not in cols:
+    if not has_column('students', 'address'):
         cur.execute('ALTER TABLE students ADD COLUMN address TEXT')
         print('Added address to students table.')
     else:
         print('address already exists.')
         
-    if 'parent_contact_no' not in cols:
+    if not has_column('students', 'parent_contact_no'):
         cur.execute('ALTER TABLE students ADD COLUMN parent_contact_no VARCHAR(20)')
         print('Added parent_contact_no to students table.')
     else:
@@ -52,6 +59,6 @@ try:
 
     conn.commit()
     conn.close()
-    print('Migration completed successfully.')
+    print(f'Migration completed successfully for {db_path}.')
 except Exception as e:
     print('Error during migration:', e)

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Building2, Lock, User } from 'lucide-react'
+import { Building2, Lock, User, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -27,36 +27,51 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen grid place-items-center px-4 py-8">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-5xl grid lg:grid-cols-2 gap-5"
       >
-        {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 shadow-neon mb-4">
-            <Building2 className="w-10 h-10 text-white" />
+        <div className="glass-card hidden lg:flex flex-col justify-between p-8">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent-soft)] px-3 py-1.5 text-[var(--accent)] text-xs font-bold uppercase tracking-[0.16em]">
+              <Sparkles className="h-3.5 w-3.5" />
+              Hostel Console
+            </div>
+            <h1 className="display-title text-4xl mt-5 leading-tight">Manage rooms, students, and payments from one calm workspace.</h1>
+            <p className="mt-4 text-sm text-[var(--ink-2)] max-w-md">
+              Built for hostel admins who need clarity, not clutter. Check occupancy, dues, and activity in a single flow.
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-white">RM Ladies Hostel</h1>
-          <p className="text-purple-300 mt-1">Management System</p>
-        </motion.div>
 
-        {/* Card */}
-        <div className="glass-card p-8 shadow-neon">
-          <h2 className="text-xl font-semibold text-white mb-6 text-center">Sign In</h2>
+          <div className="grid grid-cols-2 gap-3 mt-8 text-sm">
+            <div className="dash-card p-3">
+              <p className="text-[var(--ink-2)]">Occupancy</p>
+              <p className="display-title text-2xl">96%</p>
+            </div>
+            <div className="dash-card p-3">
+              <p className="text-[var(--ink-2)]">Payments Logged</p>
+              <p className="display-title text-2xl">1,240</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card p-7 md:p-8 lg:p-9">
+          <div className="text-center mb-7">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--accent)] shadow-md mb-4">
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="display-title text-3xl">RM Ladies Hostel</h2>
+            <p className="text-sm text-[var(--ink-2)] mt-1">Sign in to your management panel</p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm text-slate-400 mb-2">Username</label>
+              <label className="block text-sm text-[var(--ink-2)] mb-2">Username</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-2)]" />
                 <input
                   type="text"
                   value={username}
@@ -69,9 +84,9 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">Password</label>
+              <label className="block text-sm text-[var(--ink-2)] mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ink-2)]" />
                 <input
                   type="password"
                   value={password}
@@ -88,13 +103,13 @@ export default function Login() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="btn-neon w-full py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-neon w-full py-3 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </motion.button>
           </form>
 
-          <p className="text-center text-xs text-slate-500 mt-6">
+          <p className="text-center text-xs text-[var(--ink-2)] mt-6">
             Default: admin / admin123
           </p>
         </div>

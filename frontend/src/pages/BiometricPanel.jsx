@@ -22,6 +22,7 @@ export default function BiometricPanel() {
   const [testLoading, setTestLoading] = useState(false)
   const [pullLoading, setPullLoading] = useState(false)
   const [pullUsersLoading, setPullUsersLoading] = useState(false)
+  const [importAllLoading, setImportAllLoading] = useState(false)
   const [restartLoading, setRestartLoading] = useState(false)
   const [clearLoading, setClearLoading] = useState(false)
   const [deviceForm, setDeviceForm] = useState({ ip_address: '', port: 4370 })
@@ -104,6 +105,21 @@ export default function BiometricPanel() {
     }
   }
 
+  const importAllFromDevice = async () => {
+    setImportAllLoading(true)
+    try {
+      const res = await api.post('/biometric/device/import-all')
+      toast.success(
+        `Imported users +${res.data.imported_users || 0} | logs +${res.data.logs_imported || 0}`
+      )
+      fetchData()
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Import from device failed')
+    } finally {
+      setImportAllLoading(false)
+    }
+  }
+
   const restartDevice = async () => {
     if (!window.confirm('Are you sure you want to restart the device?')) return
     setRestartLoading(true)
@@ -183,10 +199,12 @@ export default function BiometricPanel() {
     setSyncing(true)
     try {
       const res = await api.post('/biometric/sync-all')
-      toast.success(`Synced ${res.data.synced} students`)
+      toast.success(
+        `Synced ${res.data.synced} students | Users +${res.data.imported_users || 0} | Logs +${res.data.logs_imported || 0}`
+      )
       fetchData()
-    } catch {
-      toast.error('Sync all failed')
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Sync all failed')
     } finally {
       setSyncing(false)
     }
@@ -469,12 +487,21 @@ export default function BiometricPanel() {
               <div className="grid grid-cols-2 gap-3">
                 <ActionCard
                   icon={RefreshCw}
-                  label="Sync All Students"
-                  desc="Push all active users to device"
+                  label="Sync All (Import + Access)"
+                  desc="Import device data, then sync access status"
                   color="text-blue-400"
                   bg="bg-blue-500/10 border-blue-500/20 hover:border-blue-500/40"
                   loading={syncing}
                   onClick={syncAll}
+                />
+                <ActionCard
+                  icon={Download}
+                  label="Import From Device"
+                  desc="Pull all users and logs only (no access changes)"
+                  color="text-cyan-400"
+                  bg="bg-cyan-500/10 border-cyan-500/20 hover:border-cyan-500/40"
+                  loading={importAllLoading}
+                  onClick={importAllFromDevice}
                 />
                 <ActionCard
                   icon={Download}

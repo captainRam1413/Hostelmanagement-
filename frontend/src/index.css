@@ -2,39 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --surface-0: #f6f5f1;
+  --surface-1: #ffffff;
+  --surface-2: #f0eee8;
+  --ink-1: #1d2d2a;
+  --ink-2: #5f7068;
+  --accent: #325f4b;
+  --accent-soft: #dce8e1;
+}
+
+.dark {
+  --surface-0: #111816;
+  --surface-1: #18211f;
+  --surface-2: #24302d;
+  --ink-1: #ecf4f0;
+  --ink-2: #a0b2ab;
+  --accent: #8ec2aa;
+  --accent-soft: #2e423b;
+}
 
 @layer base {
-  body {
-    @apply font-sans antialiased text-slate-800 bg-slate-50 transition-colors duration-200;
+  html,
+  body,
+  #root {
+    min-height: 100%;
   }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    color: var(--ink-1);
+    background:
+      radial-gradient(900px 420px at 8% -8%, #d8e8df 0%, transparent 55%),
+      radial-gradient(680px 320px at 90% 0%, #efe5d4 0%, transparent 60%),
+      var(--surface-0);
+    @apply antialiased transition-colors duration-300;
+  }
+
   .dark body {
-    @apply text-slate-200 bg-slate-900;
+    background:
+      radial-gradient(880px 420px at 8% -8%, rgba(83, 125, 106, 0.18) 0%, transparent 60%),
+      radial-gradient(640px 300px at 92% 0%, rgba(160, 142, 101, 0.14) 0%, transparent 60%),
+      var(--surface-0);
+    color: var(--ink-1);
+  }
+
+  h1,
+  h2,
+  h3,
+  .display-title {
+    font-family: 'Fraunces', serif;
+    letter-spacing: -0.01em;
   }
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-700 rounded-full; }
-::-webkit-scrollbar-thumb:hover { @apply bg-slate-400 dark:bg-slate-600; }
+::-webkit-scrollbar-thumb { @apply bg-slate-300 dark:bg-slate-600 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-slate-400 dark:bg-slate-500; }
 
 /* ── Custom Cards & Utilities ───────────────────────────────────────────── */
 @layer components {
   .dash-card {
-    @apply bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5;
+    background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-soft) 50%, transparent);
+    @apply rounded-2xl shadow-sm;
   }
   
   .glass-card {
-    @apply bg-white/50 dark:bg-slate-800/50 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-white/10;
+    background: color-mix(in srgb, var(--surface-1) 76%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-soft) 58%, transparent);
+    @apply backdrop-blur-md rounded-2xl shadow-lg;
   }
 
   .neon-input {
-    @apply w-full py-2.5 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 dark:focus:ring-purple-500/50 transition-all text-sm;
+    @apply w-full py-2.5 px-4 rounded-xl focus:outline-none focus:ring-2 transition-all text-sm;
+    color: var(--ink-1);
+    background: color-mix(in srgb, var(--surface-2) 68%, #ffffff 32%);
+    border: 1px solid color-mix(in srgb, var(--accent-soft) 55%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--accent) 36%, transparent);
   }
 
   .btn-neon {
-    @apply flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-purple-600 dark:hover:bg-purple-500 transition-all;
+    @apply flex items-center justify-center gap-2 px-4 py-2 font-semibold rounded-xl text-white transition-all;
+    background: linear-gradient(135deg, #2e5d48 0%, #45745f 100%);
+    box-shadow: 0 12px 24px rgba(46, 93, 72, 0.25);
+  }
+
+  .btn-neon:hover {
+    filter: brightness(1.04);
   }
 }
 

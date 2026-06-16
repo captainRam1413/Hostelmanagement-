@@ -14,6 +14,48 @@ from routes.biometric import biometric_bp
 from routes.reports import reports_bp
 
 
+def _ensure_schema_compatibility():
+    """Backfill legacy SQLite schemas with columns added in newer app versions."""
+    if db.engine.url.get_backend_name() != "sqlite":
+        return
+
+    with db.engine.begin() as conn:
+        table_names = {
+            row[0]
+            for row in conn.exec_driver_sql(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+        }
+
+        if "students" in table_names:
+            student_cols = {
+                row[1]
+                for row in conn.exec_driver_sql("PRAGMA table_info(students)").fetchall()
+            }
+            if "essl_uid" not in student_cols:
+                conn.exec_driver_sql("ALTER TABLE students ADD COLUMN essl_uid INTEGER")
+            if "address" not in student_cols:
+                conn.exec_driver_sql("ALTER TABLE students ADD COLUMN address TEXT")
+            if "parent_contact_no" not in student_cols:
+                conn.exec_driver_sql(
+                    "ALTER TABLE students ADD COLUMN parent_contact_no VARCHAR(20)"
+                )
+
+        if "device_config" in table_names:
+            cfg_cols = {
+                row[1]
+                for row in conn.exec_driver_sql("PRAGMA table_info(device_config)").fetchall()
+            }
+            if "device_serial" not in cfg_cols:
+                conn.exec_driver_sql(
+                    "ALTER TABLE device_config ADD COLUMN device_serial VARCHAR(100)"
+                )
+            if "firmware_version" not in cfg_cols:
+                conn.exec_driver_sql(
+                    "ALTER TABLE device_config ADD COLUMN firmware_version VARCHAR(100)"
+                )
+
+
 def create_app():
     app = Flask(__name__)
 
@@ -50,6 +92,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _ensure_schema_compatibility()
         _seed_admin()
 
     return app
