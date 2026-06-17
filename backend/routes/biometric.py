@@ -1,11 +1,21 @@
 from datetime import datetime
+from functools import wraps
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt
 from extensions import db
 from models import Student, BiometricLog, DeviceConfig
 import biometric_service as bs
 
 biometric_bp = Blueprint("biometric", __name__)
+
+def admin_required(fn):
+    @wraps(fn)
+    def decorator(*args, **kwargs):
+        claims = get_jwt()
+        if claims.get("role") != "admin":
+            return jsonify({"error": "Admin privilege required"}), 403
+        return fn(*args, **kwargs)
+    return decorator
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -51,7 +61,9 @@ def _upsert_student_from_device(uid=None, user_id=None, name=None):
     if student:
         if student.essl_uid is None and uid_int is not None:
             student.essl_uid = uid_int
-        student.biometric_enabled = True
+        # Keep existing biometric_enabled value. Do not overwrite to True.
+        if student.biometric_enabled is None:
+            student.biometric_enabled = True
         if not student.biometric_id and uid_int is not None:
             student.biometric_id = str(uid_int)
         return student, False
@@ -82,6 +94,7 @@ def get_device_config():
 
 @biometric_bp.route("/device", methods=["PUT"])
 @jwt_required()
+@admin_required
 def update_device_config():
     data = request.get_json() or {}
     cfg = _get_device_cfg()
@@ -124,6 +137,7 @@ def test_device_connection():
 
 @biometric_bp.route("/device/restart", methods=["POST"])
 @jwt_required()
+@admin_required
 def restart_device():
     cfg = _get_device_cfg()
     success, msg = bs.restart_device(cfg.ip_address, cfg.port)
@@ -135,6 +149,7 @@ def restart_device():
 
 @biometric_bp.route("/device/clear", methods=["POST"])
 @jwt_required()
+@admin_required
 def clear_device_data():
     """Clear attendance logs from device (admin only)."""
     cfg = _get_device_cfg()
@@ -254,10 +269,23 @@ def pull_device_logs():
             if created:
                 created_students += 1
 
+        # Check for duplicates before inserting
+        parsed_timestamp = datetime.fromisoformat(entry["timestamp"]) if entry.get("timestamp") else datetime.utcnow()
+        event_type = "entry" if entry.get("punch") in (0, 4) else "exit"
+
+        existing_log = BiometricLog.query.filter(
+            BiometricLog.timestamp == parsed_timestamp,
+            BiometricLog.event_type == event_type,
+            BiometricLog.student_id == (student.id if student else None)
+        ).first()
+
+        if existing_log:
+            continue
+
         log = BiometricLog(
             student_id=student.id if student else None,
-            event_type="entry" if entry.get("punch") in (0, 4) else "exit",
-            timestamp=datetime.fromisoformat(entry["timestamp"]) if entry.get("timestamp") else datetime.utcnow(),
+            event_type=event_type,
+            timestamp=parsed_timestamp,
             device_id=str(cfg.ip_address),
             notes=f"Pulled from device. Status={entry.get('status')} Punch={entry.get('punch')}",
         )
@@ -409,10 +437,23 @@ def sync_all():
         if created:
             logs_created_students += 1
 
+        # Check for duplicates before inserting
+        parsed_timestamp = datetime.fromisoformat(entry["timestamp"]) if entry.get("timestamp") else datetime.utcnow()
+        event_type = "entry" if entry.get("punch") in (0, 4) else "exit"
+
+        existing_log = BiometricLog.query.filter(
+            BiometricLog.timestamp == parsed_timestamp,
+            BiometricLog.event_type == event_type,
+            BiometricLog.student_id == (student.id if student else None)
+        ).first()
+
+        if existing_log:
+            continue
+
         log = BiometricLog(
             student_id=student.id if student else None,
-            event_type="entry" if entry.get("punch") in (0, 4) else "exit",
-            timestamp=datetime.fromisoformat(entry["timestamp"]) if entry.get("timestamp") else datetime.utcnow(),
+            event_type=event_type,
+            timestamp=parsed_timestamp,
             device_id=str(cfg.ip_address),
             notes=f"Pulled from device. Status={entry.get('status')} Punch={entry.get('punch')}",
         )
@@ -497,10 +538,23 @@ def import_all_from_device():
         if created:
             logs_created_students += 1
 
+        # Check for duplicates before inserting
+        parsed_timestamp = datetime.fromisoformat(entry["timestamp"]) if entry.get("timestamp") else datetime.utcnow()
+        event_type = "entry" if entry.get("punch") in (0, 4) else "exit"
+
+        existing_log = BiometricLog.query.filter(
+            BiometricLog.timestamp == parsed_timestamp,
+            BiometricLog.event_type == event_type,
+            BiometricLog.student_id == (student.id if student else None)
+        ).first()
+
+        if existing_log:
+            continue
+
         log = BiometricLog(
             student_id=student.id if student else None,
-            event_type="entry" if entry.get("punch") in (0, 4) else "exit",
-            timestamp=datetime.fromisoformat(entry["timestamp"]) if entry.get("timestamp") else datetime.utcnow(),
+            event_type=event_type,
+            timestamp=parsed_timestamp,
             device_id=str(cfg.ip_address),
             notes=f"Pulled from device. Status={entry.get('status')} Punch={entry.get('punch')}",
         )
